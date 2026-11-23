@@ -1,0 +1,42 @@
+# Computes the strategy signal once a month and commits it to signals/.
+# No broker connection here: GitHub's servers only produce the signal.
+#
+# Runs on the 8th of each month: the Fed H.10 FX data on FRED is published weekly,
+# so a few days are needed for the previous month-end to be available.
+# You can also run it by hand: GitHub → Actions → "Monthly FX signal" → Run workflow.
+
+name: Monthly FX signal
+
+on:
+  schedule:
+    - cron: "17 7 8 * *"      # 07:17 UTC on day 8 of every month
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  signal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Compute signal
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}   # Settings → Secrets and variables → Actions
+        run: python src/live_signal.py
+
+      - name: Commit signal
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add signals/
+          git diff --cached --quiet || git commit -m "Monthly signal $(date -u +%Y-%m)"
+          git push
