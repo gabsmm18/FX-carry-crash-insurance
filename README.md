@@ -102,41 +102,10 @@ Finally, momentum generates its strongest returns precisely when carry experienc
 - **Statistical inference.** Sharpe ratio estimates have a standard error of approximately 0.2 over this sample. Differences between strategies have not been formally tested.
 - **Implementation.** Transaction costs of 3 basis points reflect institutional execution. Retail implementation would face wider spreads and lower realised carry.
 
-## 6. Repository Structure
-
-```
-notebooks/carry_momentum_fx.ipynb     Research notebook: theory, backtest, crisis analysis, robustness
-src/strategy.py                       Data retrieval, signal construction, backtest and performance metrics
-src/live_signal.py                    Monthly signal generation and optional Interactive Brokers paper-trading rebalancing
-.github/workflows/monthly_signal.yml  Scheduled workflow that recomputes the signal on the 8th of each month
-figures/                              Figures used in this document
-requirements.txt                      Python dependencies
-```
-
-The scheduled workflow stores current target positions in `signals/latest.json` and the full history in `signals/history.csv`.
-
-## 7. Reproduction
-
-A free FRED API key is required ([fredaccount.stlouisfed.org/apikeys](https://fredaccount.stlouisfed.org/apikeys)).
-
-**Google Colab.** Open the notebook via the badge above, store the key as a Colab secret named `FRED_API_KEY`, and run all cells.
-
-**Local environment.**
-```bash
-pip install -r requirements.txt
-export FRED_API_KEY=your_key
-python src/live_signal.py                               # compute the current signal
-python src/live_signal.py --broker ib --capital 100000  # dry run against an IBKR paper account
-```
-
-**Scheduled signal.** Add `FRED_API_KEY` as a repository secret under *Settings → Secrets and variables → Actions*.
-
-Orders are submitted only to a paper trading account and only when the `--execute` flag is passed explicitly.
 
 ## 8. Further Work
 
 - Combination of carry and momentum as a diversified portfolio
-- Replacement of the EUR and GBP rate series (€STR, SONIA)
 - Bootstrap inference on Sharpe ratio differences
 - Extension of the universe to emerging-market currencies
 
