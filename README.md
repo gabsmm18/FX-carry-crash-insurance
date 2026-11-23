@@ -156,6 +156,4 @@ Menkhoff, L., Sarno, L., Schmeling, M. & Schrimpf, A. (2012b). Currency momentum
 
 ---
 
-Mattia Mariani, MSc Applied Economics and Finance, Copenhagen Business School
-
-This repository is for research and educational purposes only and does not constitute investment advice.
+Mattia Mariani
