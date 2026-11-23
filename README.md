@@ -1,123 +1,161 @@
-# FX Carry Crash Insurance: Does a Momentum Filter Protect the Carry Trade?
+# FX Carry Crash Insurance
+
+**Does a momentum filter protect the currency carry trade from crashes? Evidence from G10 currencies, 2000–2026**
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gabsmm18/fx-carry-crash-insurance/blob/main/notebooks/carry_momentum_fx.ipynb)
-![Monthly signal](https://github.com/gabsmm18/fx-carry-crash-insurance/actions/workflows/monthly_signal.yml/badge.svg)
+[![Monthly signal](https://github.com/gabsmm18/fx-carry-crash-insurance/actions/workflows/monthly_signal.yml/badge.svg)](https://github.com/gabsmm18/fx-carry-crash-insurance/actions/workflows/monthly_signal.yml)
 
-> **TL;DR.** On G10 currencies (2000–2026, net of costs), a 3-month momentum filter works as **crash insurance, not as alpha**. It nearly eliminates the carry trade's negative skewness (**−0.81 → −0.10**) and turns the worst crisis months positive (**Oct-2008: −11.2% → +3.6%**), but it **halves the Sharpe ratio (0.40 → 0.19)** through whipsaw losses and 5× higher turnover. The result holds in 10 of 12 parameter combinations.
+## Abstract
+
+The currency carry trade earns a positive average return but is exposed to sudden, severe losses during periods of market stress. This project tests whether a 3-month time-series momentum filter, which closes carry positions whose recent performance contradicts the carry signal, mitigates this crash risk without sacrificing the carry premium. Using G10 currencies over January 2000 – October 2026, net of transaction costs, the filter reduces the skewness of monthly returns from −0.81 to −0.10 and improves returns in six of seven major crisis months (October 2008: −11.2% to +3.6%). However, it lowers the Sharpe ratio from 0.40 to 0.19 and does not reduce the maximum drawdown. The result holds in 10 of 12 parameter specifications. The filter therefore acts as costly crash insurance rather than as a source of alpha.
 
 ![Cumulative returns and drawdowns](figures/cumulative_drawdown.png)
 
----
+*Figure 1. Cumulative log returns (top) and drawdowns (bottom) of the three strategies, scaled to a 10% annual volatility target, net of transaction costs.*
 
-## Motivation
+## 1. Motivation
 
-Uncovered Interest Parity says that high-yielding currencies should depreciate by exactly their interest advantage, so borrowing in low-yield currencies to invest in high-yield ones should earn nothing. Empirically it does not hold (the **forward premium puzzle**, Fama 1984), so the **carry trade** earns a positive average return.
+Under uncovered interest parity (UIP), the expected depreciation of a currency equals its interest rate differential against the investor's home currency:
 
-The standard explanation is a **crash-risk premium**: carry earns small, steady gains and suffers rare, violent losses when crowded positions unwind (Brunnermeier, Nagel & Pedersen 2008; Menkhoff et al. 2012). Examples are 2008, the 2015 SNB de-peg and the August 2024 yen unwind.
+$$E_t[\Delta \ln S_{t+1}] = -(i^*_t - i_t)$$
 
-**Research question:** can a simple momentum filter, which drops a carry position when its recent trend turns against it, avoid these crashes without giving up the carry premium?
+where $S$ is the exchange rate in USD per unit of foreign currency, $i^*$ the foreign interest rate and $i$ the US interest rate. If UIP held, borrowing in low-yielding currencies to invest in high-yielding ones would have zero expected return. Empirically, high-yielding currencies depreciate by less than the differential implies, and often appreciate (Fama, 1984). This forward premium puzzle is the source of the carry trade's positive average return.
 
-## Strategy
+The literature interprets this return largely as compensation for risk. Carry returns are negatively skewed and concentrated losses occur during episodes of global deleveraging (Brunnermeier, Nagel & Pedersen, 2008), carry performs poorly when global FX volatility rises (Menkhoff et al., 2012a), and the cross-section of currency returns is largely explained by a common carry factor (Lustig, Roussanov & Verdelhan, 2011). Separately, currencies exhibit time-series momentum (Menkhoff et al., 2012b). Because carry unwinds often unfold over several months, a momentum signal could in principle identify them early. This project tests that conjecture.
 
-| Step | Rule |
+## 2. Data and Methodology
+
+**Data.** Daily exchange rates from the Federal Reserve H.10 release and monthly 3-month interbank rates from the OECD Main Economic Indicators, both retrieved from FRED. Exchange rates are sampled at month-end. The universe comprises nine G10 currencies against the US dollar: EUR, GBP, JPY, CHF, AUD, NZD, CAD, NOK and SEK.
+
+**Excess returns.** The monthly excess return from holding currency *k* against the USD is
+
+$$xr_{k,t} = \ln\frac{S_{k,t}}{S_{k,t-1}} + \frac{i^*_{k,t-1} - i_{t-1}}{12}$$
+
+which approximates the return on a rolled one-month forward contract under covered interest parity.
+
+**Strategies.** All portfolios are rebalanced monthly. Signals are formed with information available at the end of month *t* and applied to returns in month *t+1*.
+
+| Strategy | Construction |
 |---|---|
-| Universe | EUR, GBP, JPY, CHF, AUD, NZD, CAD, NOK, SEK vs USD |
-| Carry signal | 3-month interest differential vs USD |
-| Carry portfolio | Long the 3 highest-yielders, short the 3 lowest (±1/3 each), dollar-neutral, rebalanced monthly |
-| Momentum filter | Close a long (short) if its 3-month excess return is negative (positive) |
-| Excess return | `xr = Δln S + (i* − i)/12`, the return of a rolled 1-month forward under CIP |
-| Costs | 3 bp per unit of turnover |
-| Benchmarks | Pure carry; pure time-series momentum (long if 3M return > 0, short otherwise) |
+| Carry | Rank currencies by interest rate differential; long the top three and short the bottom three, with weights of ±1/3. The portfolio is dollar-neutral. |
+| Time-series momentum | Long each currency with a positive 3-month cumulative excess return, short otherwise; equal weights. |
+| Carry + momentum filter | Carry portfolio, with a long (short) position set to zero when its 3-month excess return is negative (positive). |
 
-Signals use only information available at month-end *t* and are applied to returns in month *t+1* (no look-ahead). Parameters (3 currencies per leg, 3-month lookback) were fixed **before** looking at results.
+**Costs and risk scaling.** Transaction costs are 3 basis points per unit of turnover. Results are reported both at raw exposure and at a 10% ex-ante volatility target, based on 24-month realised volatility with leverage capped at 3×. The baseline parameters (three currencies per leg, 3-month lookback) were fixed before the results were examined.
 
-## Results
+## 3. Results
 
-**Full sample, Jan 2000 – Oct 2026, raw exposure, net of costs**
+**Table 1. Performance, January 2000 – October 2026, net of costs**
 
 | | Carry | TS Momentum | Carry + Filter |
 |---|---:|---:|---:|
 | Annual return | 2.8% | 0.2% | 1.4% |
 | Annual volatility | 7.0% | 6.2% | 7.2% |
-| **Sharpe ratio** | **0.40** | 0.04 | 0.19 |
-| **Skewness** | **−0.81** | +0.54 | −0.10 |
+| Sharpe ratio | 0.40 | 0.04 | 0.19 |
+| Sharpe ratio (10% volatility target) | 0.49 | 0.15 | 0.19 |
+| Skewness | −0.81 | 0.54 | −0.10 |
 | Worst month | −11.2% | −5.8% | −8.0% |
-| Max drawdown | −33% | −40% | −37% |
-| Hit rate | 58% | 48% | 52% |
-| Avg. monthly turnover | 0.10 | 0.52 | 0.55 |
+| Maximum drawdown | −33% | −40% | −37% |
+| Share of positive months | 58% | 48% | 52% |
+| Average monthly turnover | 0.10 | 0.52 | 0.55 |
 
-**Crisis months: the filter does what it was designed to do**
+*Raw exposure unless stated. Maximum drawdown is computed on cumulative log returns. The carry Sharpe ratio has a t-statistic of approximately 2.1.*
 
-| Month | Event | Carry | Carry + Filter |
-|---|---|---:|---:|
-| Oct 2008 | Lehman / global deleveraging | −11.2% | **+3.6%** |
-| Jan 2015 | SNB removes EUR/CHF floor | −3.5% | −0.7% |
-| Mar 2020 | Covid dash for dollars | −5.7% | **+0.9%** |
-| Sep 2022 | Strong-dollar shock | −4.6% | **+2.9%** |
+**Table 2. Monthly returns in crisis episodes**
 
-Ahead of Oct 2008 the filter had already halved gross exposure (2.0 → 1.0), because high-yielders had been losing for months.
+| Month | Episode | Carry | TS Momentum | Carry + Filter |
+|---|---|---:|---:|---:|
+| Oct 2008 | Post-Lehman market turmoil | −11.2% | 9.6% | 3.6% |
+| Nov 2008 | Global deleveraging | −3.6% | 3.0% | 2.0% |
+| Aug 2011 | Euro area debt crisis, US downgrade | −0.6% | −0.3% | −1.2% |
+| Jan 2015 | SNB removes the EUR/CHF floor | −3.5% | 1.9% | −0.7% |
+| Mar 2020 | COVID-19 dollar funding stress | −5.7% | 3.4% | 0.9% |
+| Sep 2022 | US dollar appreciation | −4.6% | 5.2% | 2.9% |
+| Aug 2024 | Yen carry unwind | 0.0% | 2.5% | 3.3% |
 
-**Sub-samples: Sharpe ratio**
+The filter outperforms carry in six of the seven episodes and delivers a positive return in five. Ahead of October 2008 it had already reduced gross exposure by half. It offers limited protection against discontinuous shocks without a preceding trend, such as the Swiss National Bank decision of January 2015.
+
+**Table 3. Sharpe ratio by sub-period**
 
 | Period | Carry | TS Momentum | Carry + Filter |
 |---|---:|---:|---:|
-| 2000–2007 | **0.95** | 0.25 | 0.54 |
-| 2008–2015 | 0.03 | **0.43** | 0.37 |
-| 2016–2026 | **0.42** | −0.50 | −0.27 |
+| 2000–2007 | 0.95 | 0.25 | 0.54 |
+| 2008–2015 | 0.03 | 0.43 | 0.37 |
+| 2016–2026 | 0.42 | −0.50 | −0.27 |
 
-**Robustness.** Across 2/3/4 currencies per leg and 1/3/6/12-month lookbacks, the filter lowers the Sharpe ratio in **10 of 12** combinations.
+**Robustness.** Across 2, 3 and 4 currencies per leg and lookback windows of 1, 3, 6 and 12 months, the filter lowers the Sharpe ratio relative to pure carry in 10 of 12 specifications.
 
-## Interpretation
+## 4. Discussion
 
-1. **Carry behaves as theory predicts:** a positive premium paired with strongly negative skewness, i.e. compensation for crash risk.
-2. **The filter is insurance with a negative carry of its own.** It avoids the fast crashes but bleeds in trendless markets: it exits, the currency rebounds, it re-enters late (*whipsaw*). As the drawdown chart shows, carry's worst drawdown is one sharp hole in 2008, while the filter's is a slow decline from 2015 onwards.
-3. **The filter inherits momentum's fate.** It helps only in 2008–2015, the regime of repeated crises, and loses after 2016, when FX time-series momentum itself performed poorly in this sample.
-4. **Implication:** momentum earns exactly when carry crashes (+9.6% in Oct 2008). This suggests **combining** the two strategies as diversifiers (à la Asness, Moskowitz & Pedersen 2013) rather than using one to switch the other off. This is the next test.
+First, the carry strategy displays the properties documented in the literature: a positive, marginally significant premium combined with pronounced negative skewness, consistent with a crash-risk interpretation.
 
-## Limitations
+Second, the filter achieves its intended objective of reducing crash exposure, but at a substantial cost. In periods without persistent trends it exits positions that subsequently recover and re-enters late. These whipsaw losses, together with turnover nearly six times higher than pure carry, produce the gradual decline visible in Figure 1 after 2015. As a result, the filter does not reduce the maximum drawdown: it replaces a sharp loss with a prolonged one.
 
-- **Rates data:** OECD 3-month interbank rates (monthly averages) proxy for forward-implied rates; the cross-currency basis is ignored. The EUR and GBP series on FRED end in Jan 2026, so these currencies drop out of the most recent months.
-- **Small universe:** 9 currencies with 3 per leg is concentrated and noisy. Academic studies use 30–50 currencies, including emerging markets. The USD is excluded from the cross-section.
-- **No formal significance test:** a Sharpe of 0.4 over 26 years has a standard error of roughly 0.2.
-- **Implementation:** retail brokers pay less than the theoretical carry. 3 bp costs are an institutional assumption.
+Third, the filtered strategy largely inherits the behaviour of momentum. It adds value only during 2008–2015, when momentum itself performed well, and underperforms afterwards. Because the filter removes positions from one side of the portfolio independently of the other, it also breaks dollar-neutrality and introduces an unintended directional exposure to the US dollar. This explains why its volatility does not decline despite holding fewer positions.
 
-## Repository
+Finally, momentum generates its strongest returns precisely when carry experiences its largest losses. This negative dependence in crisis periods suggests that combining the two strategies as separate return sources, in the spirit of Asness, Moskowitz & Pedersen (2013), may be a more effective use of the momentum signal than using it as a conditioning filter. This is left for further work.
+
+## 5. Limitations
+
+- **Interest rate data.** OECD 3-month interbank rates are monthly averages and serve as a proxy for forward-implied rates; deviations from covered interest parity are not modelled. The EUR and GBP series on FRED end in January 2026, so these currencies are excluded from the most recent months.
+- **Cross-section.** Nine currencies with three per leg form a concentrated portfolio. Academic studies typically use 30–50 currencies, including emerging markets. The US dollar is not part of the ranking.
+- **Statistical inference.** Sharpe ratio estimates have a standard error of approximately 0.2 over this sample. Differences between strategies have not been formally tested.
+- **Implementation.** Transaction costs of 3 basis points reflect institutional execution. Retail implementation would face wider spreads and lower realised carry.
+
+## 6. Repository Structure
 
 ```
-notebooks/carry_momentum_fx.ipynb     research notebook: theory, backtest, crises, robustness
-src/strategy.py                       data download (FRED API), signals, backtest, metrics
-src/live_signal.py                    monthly signal + optional IBKR paper-account rebalancing
-.github/workflows/monthly_signal.yml  computes and commits the signal on the 8th of each month
-signals/                              latest.json and history.csv (written by the workflow)
-figures/                              charts used in this README
+notebooks/carry_momentum_fx.ipynb     Research notebook: theory, backtest, crisis analysis, robustness
+src/strategy.py                       Data retrieval, signal construction, backtest and performance metrics
+src/live_signal.py                    Monthly signal generation and optional Interactive Brokers paper-trading rebalancing
+.github/workflows/monthly_signal.yml  Scheduled workflow that recomputes the signal on the 8th of each month
+figures/                              Figures used in this document
+requirements.txt                      Python dependencies
 ```
 
-## How to run
+The scheduled workflow stores current target positions in `signals/latest.json` and the full history in `signals/history.csv`.
 
-1. Get a free FRED API key: [fredaccount.stlouisfed.org/apikeys](https://fredaccount.stlouisfed.org/apikeys).
-2. **Colab:** click the badge, add the key as a Colab Secret named `FRED_API_KEY`, then `Runtime → Run all`.
-3. **Locally:**
-   ```bash
-   pip install -r requirements.txt
-   export FRED_API_KEY=your_key
-   python src/live_signal.py                               # signal only
-   python src/live_signal.py --broker ib --capital 100000  # dry run vs IBKR paper account
-   ```
-4. **Automated signal:** add `FRED_API_KEY` as a repository secret (*Settings → Secrets and variables → Actions*).
+## 7. Reproduction
 
-Never commit your API key.
+A free FRED API key is required ([fredaccount.stlouisfed.org/apikeys](https://fredaccount.stlouisfed.org/apikeys)).
+
+**Google Colab.** Open the notebook via the badge above, store the key as a Colab secret named `FRED_API_KEY`, and run all cells.
+
+**Local environment.**
+```bash
+pip install -r requirements.txt
+export FRED_API_KEY=your_key
+python src/live_signal.py                               # compute the current signal
+python src/live_signal.py --broker ib --capital 100000  # dry run against an IBKR paper account
+```
+
+**Scheduled signal.** Add `FRED_API_KEY` as a repository secret under *Settings → Secrets and variables → Actions*.
+
+Orders are submitted only to a paper trading account and only when the `--execute` flag is passed explicitly.
+
+## 8. Further Work
+
+- Combination of carry and momentum as a diversified portfolio
+- Replacement of the EUR and GBP rate series (€STR, SONIA)
+- Bootstrap inference on Sharpe ratio differences
+- Extension of the universe to emerging-market currencies
 
 ## References
 
-- Fama, E. (1984). Forward and spot exchange rates. *Journal of Monetary Economics*.
-- Brunnermeier, M., Nagel, S. & Pedersen, L. (2008). Carry trades and currency crashes. *NBER Macroeconomics Annual*.
-- Lustig, H., Roussanov, N. & Verdelhan, A. (2011). Common risk factors in currency markets. *Review of Financial Studies*.
-- Menkhoff, L., Sarno, L., Schmeling, M. & Schrimpf, A. (2012). Carry trades and global FX volatility. *Journal of Finance*.
-- Menkhoff, L., Sarno, L., Schmeling, M. & Schrimpf, A. (2012). Currency momentum strategies. *Journal of Financial Economics*.
-- Asness, C., Moskowitz, T. & Pedersen, L. (2013). Value and momentum everywhere. *Journal of Finance*.
+Asness, C., Moskowitz, T. & Pedersen, L. (2013). Value and momentum everywhere. *Journal of Finance*, 68(3), 929–985.
+
+Brunnermeier, M., Nagel, S. & Pedersen, L. (2008). Carry trades and currency crashes. *NBER Macroeconomics Annual*, 23, 313–347.
+
+Fama, E. (1984). Forward and spot exchange rates. *Journal of Monetary Economics*, 14(3), 319–338.
+
+Lustig, H., Roussanov, N. & Verdelhan, A. (2011). Common risk factors in currency markets. *Review of Financial Studies*, 24(11), 3731–3777.
+
+Menkhoff, L., Sarno, L., Schmeling, M. & Schrimpf, A. (2012a). Carry trades and global foreign exchange volatility. *Journal of Finance*, 67(2), 681–718.
+
+Menkhoff, L., Sarno, L., Schmeling, M. & Schrimpf, A. (2012b). Currency momentum strategies. *Journal of Financial Economics*, 106(3), 660–684.
 
 ---
 
-**Author:** Mattia Mariani, MSc Applied Economics and Finance, Copenhagen Business School
+Mattia Mariani, MSc Applied Economics and Finance, Copenhagen Business School
 
-*Educational and research project. Not investment advice.*
+This repository is for research and educational purposes only and does not constitute investment advice.
