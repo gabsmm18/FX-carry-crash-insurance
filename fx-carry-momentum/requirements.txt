@@ -1,5 +1,0 @@
-pandas>=2.0
-numpy>=1.24
-matplotlib>=3.7
-# only needed for broker execution (Interactive Brokers):
-# ib_async>=1.0
