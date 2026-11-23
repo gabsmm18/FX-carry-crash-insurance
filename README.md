@@ -1,7 +1,7 @@
-# FX Carry with a Momentum Filter: Crash Insurance or Alpha?
+# FX Carry Crash Insurance: Does a Momentum Filter Protect the Carry Trade?
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gabsmm18/fx-carry-momentum/blob/main/notebooks/carry_momentum_fx.ipynb)
-![Monthly signal](https://github.com/gabsmm18/fx-carry-momentum/actions/workflows/monthly_signal.yml/badge.svg)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gabsmm18/fx-carry-crash-insurance/blob/main/notebooks/carry_momentum_fx.ipynb)
+![Monthly signal](https://github.com/gabsmm18/fx-carry-crash-insurance/actions/workflows/monthly_signal.yml/badge.svg)
 
 > **TL;DR.** On G10 currencies (2000–2026, net of costs), a 3-month momentum filter works as **crash insurance, not as alpha**. It nearly eliminates the carry trade's negative skewness (**−0.81 → −0.10**) and turns the worst crisis months positive (**Oct-2008: −11.2% → +3.6%**), but it **halves the Sharpe ratio (0.40 → 0.19)** through whipsaw losses and 5× higher turnover. The result holds in 10 of 12 parameter combinations.
 
